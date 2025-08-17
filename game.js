@@ -3,15 +3,22 @@
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
   let W=0,H=0,DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+
+  const hudEl = document.querySelector('.hud');
+  const footEl = document.querySelector('.foot');
+
   function resize(){
-    const hh=document.querySelector('.hud').offsetHeight;
-    const fh=document.querySelector('.foot').offsetHeight;
-    W=cv.clientWidth=innerWidth;
-    H=cv.clientHeight=innerHeight-hh-fh;
-    cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
+    const hh = (hudEl?.offsetHeight) || 0;
+    const fh = (footEl?.offsetHeight) || 0;
+    W = innerWidth;
+    H = Math.max(100, innerHeight - hh - fh); // evita valores negativos
+    cv.width = Math.floor(W * DPR);
+    cv.height = Math.floor(H * DPR);
+    cv.style.width = W + "px";
+    cv.style.height = H + "px";
     ctx.setTransform(DPR,0,0,DPR,0,0);
   }
-  addEventListener('resize', resize,{passive:true});
+  addEventListener('resize', () => { resize(); computeScale(); }, {passive:true});
 
   // ===== UI =====
   const hpEl = document.getElementById('hp');
@@ -68,10 +75,13 @@
   const sfx={ hit(){tone(200,.06,'square',.09); tone(120,.08,'sawtooth',.05)},
               pickup(){tone(660,.06,'sine',.07); tone(990,.09,'sine',.05)},
               bonfire(){tone(440,.12,'triangle',.08); tone(660,.18,'triangle',.04)}};
-  muteBtn.onclick=()=>{ soundOn=!soundOn; muteBtn.textContent=soundOn?'🔊':'🔇'; };
-  helpBtn.onclick=()=>{ overlay.classList.remove('hidden'); paused=true; };
-  playBtn.onclick=start;
-  vibeBtn.onclick=()=>{ vibrate=!vibrate; showToast(vibrate?'Vibração: ON':'Vibração: OFF'); if(vibrate && navigator.vibrate) navigator.vibrate(20); };
+  muteBtn?.addEventListener('click', ()=>{ soundOn=!soundOn; if(muteBtn) muteBtn.textContent=soundOn?'🔊':'🔇'; });
+  helpBtn?.addEventListener('click', ()=>{ overlay?.classList.remove('hidden'); paused=true; });
+  playBtn?.addEventListener('click', start);
+  vibeBtn?.addEventListener('click', ()=>{ 
+    vibrate=!vibrate; showToast(vibrate?'Vibração: ON':'Vibração: OFF'); 
+    if(vibrate && navigator.vibrate) navigator.vibrate(20); 
+  });
 
   // ===== Mundo =====
   const T=24; // tile
@@ -121,7 +131,13 @@
     return false;
   }
   function rects(x,y,w,h, X,Y,W,H){ return !(x+w<X||x>X+W||y+h<Y||y>Y+H); }
-  function showToast(msg,danger=false){ toast.textContent=msg; toast.classList.remove('hidden'); toast.style.borderColor = danger? 'rgba(255,107,107,.6)':'rgba(255,255,255,.08)'; setTimeout(()=>toast.classList.add('hidden'), 1100); }
+  function showToast(msg,danger=false){ 
+    if(!toast) return;
+    toast.textContent=msg; 
+    toast.classList.remove('hidden'); 
+    toast.style.borderColor = danger? 'rgba(255,107,107,.6)':'rgba(255,255,255,.08)'; 
+    setTimeout(()=>toast.classList.add('hidden'), 1100); 
+  }
 
   // ===== Powers Roguelike =====
   function givePowerUp(){
@@ -171,10 +187,16 @@
   // ===== Loop =====
   const G=800, MAXVX=110, JUMP=260;
   let paused=true, last=0, wantJump=false;
-  function start(){ paused=false; overlay.classList.add('hidden'); bootAC(); reset(); loop(performance.now()); }
+  function start(){ 
+    paused=false; 
+    overlay?.classList.add('hidden'); 
+    bootAC(); 
+    reset(); 
+    loop(performance.now()); 
+  }
   function reset(){ player.x=player.checkpoint.x; player.y=player.checkpoint.y; player.vx=0; player.vy=0; player.dead=false; }
   function die(){ if(player.dead) return; player.dead=true; showToast('YOU DIED',true); tone(80,.25,'sawtooth',.08); paused=true; setTimeout(()=>{ paused=false; reset(); },900); }
-  function togglePause(){ paused=!paused; if(paused) overlay.classList.remove('hidden'); else overlay.classList.add('hidden'); }
+  function togglePause(){ paused=!paused; if(paused) overlay?.classList.remove('hidden'); else overlay?.classList.add('hidden'); }
 
   function loop(ts){
     if(paused){ last=ts; requestAnimationFrame(loop); return; }
@@ -228,6 +250,7 @@
       }
     }
 
+    // Orbs
     for(let i=orbs.length-1;i>=0;i--){
       const o=orbs[i];
       if(rects(player.x,player.y,player.w,player.h, o.x-4,o.y-4,8,8)){
@@ -235,10 +258,12 @@
       }
     }
 
+    // Bonfires
     for(const f of fires){
       if(Math.abs(player.x-(f.x-8))<14 && Math.abs(player.y-(f.y-12))<18) lightBonfire(f);
     }
 
+    // Abismo
     if(player.y>H*2){ player.hp=0; hpEl.textContent=0; die(); }
   }
 
@@ -248,15 +273,19 @@
   function computeScale(){ scale = Math.max(2, Math.min(4, Math.floor(innerWidth/(T*12)))); }
 
   function draw(){
+    // Fundo
     const grad=ctx.createLinearGradient(0,0,0,H);
     grad.addColorStop(0,'#0e1322'); grad.addColorStop(1,'#090b12');
     ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
 
+    // Câmera
     const camX = Math.floor(Math.max(0, Math.min(player.x - W/2/scale, COL*T - W/scale)));
 
+    // Névoa
     ctx.fillStyle='rgba(180,200,255,0.04)';
     for(let i=0;i<6;i++){ const y=i*40+((performance.now()/40+i*17)%H); ctx.fillRect(0,y,W,2); }
 
+    // Tiles
     ctx.fillStyle='#1d2742';
     for(let r=0;r<ROW;r++){
       for(let c=0;c<COL;c++){
@@ -268,6 +297,7 @@
       }
     }
 
+    // Bonfires
     for(const f of fires){
       const sx=worldToScreen(f.x-8-camX), sy=worldToScreen(f.y-16);
       if(sx>-40&&sx<W+40){
@@ -277,11 +307,13 @@
       }
     }
 
+    // Orbs
     for(const o of orbs){
       const sx=worldToScreen(o.x-camX), sy=worldToScreen(o.y);
       if(sx>-16&&sx<W+16){ ctx.beginPath(); ctx.arc(sx, sy, 4*scale, 0, Math.PI*2); ctx.fillStyle='rgba(140,255,107,0.85)'; ctx.fill(); }
     }
 
+    // Inimigos
     for(const e of enemies){
       if(!e.alive) continue;
       const sx=worldToScreen(e.x-camX), sy=worldToScreen(e.y);
@@ -291,6 +323,34 @@
       }
     }
 
+    // Player
     const px=worldToScreen(player.x-camX), py=worldToScreen(player.y);
-    ctx.fillStyle='rgba(100,140,255,0.15)';
+    ctx.fillStyle='rgba(100,140,255,0.15)'; // sombra
     ctx.fillRect(px-4, py+player.h*scale, player.w*scale+8, 4);
+
+    const grd=ctx.createLinearGradient(px,py,px,py+player.h*scale); // corpo
+    grd.addColorStop(0,'#2c7bff'); grd.addColorStop(1,'#1a3cff');
+    ctx.fillStyle=grd; ctx.fillRect(px, py, player.w*scale, player.h*scale);
+
+    // Espada durante ataque
+    if(held.attack){
+      ctx.fillStyle='rgba(245,179,66,0.35)';
+      if(player.dir>0) ctx.fillRect(px+player.w*scale, py+4, 18*scale, 12*scale);
+      else ctx.fillRect(px-18*scale, py+4, 18*scale, 12*scale);
+    }
+  }
+
+  // ===== Start =====
+  function init(){
+    resize();
+    computeScale();
+    spawnLevel();
+    start(); // 🚀 inicia o loop automaticamente
+  }
+  // Garante que o DOM exista antes de iniciar
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
