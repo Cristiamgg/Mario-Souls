@@ -220,18 +220,14 @@
       e.vx = 30*e.dir;
       const ex = e.x + e.vx*dt;
       if(!solidAt(ex, e.y, e.w, e.h)) e.x=ex; else e.dir*=-1;
-      // queda/gravity simples
       const ey = e.y + (e.vy||0)*dt + 200*dt;
       if(!solidAt(e.x, ey, e.w, e.h)) e.y=ey; else e.vy=0;
-
-      // dano no contato
       if(rects(player.x,player.y,player.w,player.h, e.x,e.y,e.w,e.h)){
         player.hp--; hpEl.textContent=player.hp; tone(110,.06,'sawtooth',.07);
         if(player.hp<=0) die();
       }
     }
 
-    // Orbs (almas)
     for(let i=orbs.length-1;i>=0;i--){
       const o=orbs[i];
       if(rects(player.x,player.y,player.w,player.h, o.x-4,o.y-4,8,8)){
@@ -239,12 +235,10 @@
       }
     }
 
-    // Bonfires
     for(const f of fires){
       if(Math.abs(player.x-(f.x-8))<14 && Math.abs(player.y-(f.y-12))<18) lightBonfire(f);
     }
 
-    // Caiu no abismo
     if(player.y>H*2){ player.hp=0; hpEl.textContent=0; die(); }
   }
 
@@ -254,19 +248,15 @@
   function computeScale(){ scale = Math.max(2, Math.min(4, Math.floor(innerWidth/(T*12)))); }
 
   function draw(){
-    // BG
     const grad=ctx.createLinearGradient(0,0,0,H);
     grad.addColorStop(0,'#0e1322'); grad.addColorStop(1,'#090b12');
     ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
 
-    // Camera
     const camX = Math.floor(Math.max(0, Math.min(player.x - W/2/scale, COL*T - W/scale)));
 
-    // Névoa
     ctx.fillStyle='rgba(180,200,255,0.04)';
     for(let i=0;i<6;i++){ const y=i*40+((performance.now()/40+i*17)%H); ctx.fillRect(0,y,W,2); }
 
-    // Tiles
     ctx.fillStyle='#1d2742';
     for(let r=0;r<ROW;r++){
       for(let c=0;c<COL;c++){
@@ -278,7 +268,6 @@
       }
     }
 
-    // Bonfires
     for(const f of fires){
       const sx=worldToScreen(f.x-8-camX), sy=worldToScreen(f.y-16);
       if(sx>-40&&sx<W+40){
@@ -288,13 +277,11 @@
       }
     }
 
-    // Orbs
     for(const o of orbs){
       const sx=worldToScreen(o.x-camX), sy=worldToScreen(o.y);
       if(sx>-16&&sx<W+16){ ctx.beginPath(); ctx.arc(sx, sy, 4*scale, 0, Math.PI*2); ctx.fillStyle='rgba(140,255,107,0.85)'; ctx.fill(); }
     }
 
-    // Inimigos
     for(const e of enemies){
       if(!e.alive) continue;
       const sx=worldToScreen(e.x-camX), sy=worldToScreen(e.y);
@@ -304,26 +291,6 @@
       }
     }
 
-    // Player
     const px=worldToScreen(player.x-camX), py=worldToScreen(player.y);
-    // sombra
     ctx.fillStyle='rgba(100,140,255,0.15)';
     ctx.fillRect(px-4, py+player.h*scale, player.w*scale+8, 4);
-    // corpo
-    const grd=ctx.createLinearGradient(px,py,px,py+player.h*scale);
-    grd.addColorStop(0,'#2c7bff'); grd.addColorStop(1,'#1a3cff');
-    ctx.fillStyle=grd; ctx.fillRect(px, py, player.w*scale, player.h*scale);
-    // espada
-    if(held.attack){
-      ctx.fillStyle='rgba(245,179,66,0.35)';
-      if(player.dir>0) ctx.fillRect(px+player.w*scale, py+4, 18*scale, 12*scale);
-      else ctx.fillRect(px-18*scale, py+4, 18*scale, 12*scale);
-    }
-  }
-
-  // ===== Start =====
-  function init(){
-    resize(); computeScale(); spawnLevel(); draw();
-  }
-  init();
-})();
