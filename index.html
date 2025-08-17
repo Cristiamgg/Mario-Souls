@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>Abyss Runner</title>
+  <meta name="theme-color" content="#0b0f18">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hud">
+    <div class="logo"><i></i><b>Abyss Runner</b></div>
+    <div class="stats">
+      <span class="pill">🗡️ ATK <b id="atk">1</b></span>
+      <span class="pill">💚 HP <b id="hp">5</b></span>
+      <span class="pill">🏆 <b id="best">0</b></span>
+      <button id="mute" class="btn">🔊</button>
+      <button id="help" class="btn">❔</button>
+    </div>
+  </header>
+
+  <main>
+    <canvas id="cv"></canvas>
+
+    <!-- Controles na tela (mobile) -->
+    <div class="pad">
+      <button class="key" data-key="left">◀︎</button>
+      <button class="key" data-key="right">▶︎</button>
+      <button class="key" data-key="down">⬇︎</button>
+    </div>
+    <div class="act">
+      <button class="key" data-key="jump">⤴︎</button>
+      <button class="key" data-key="attack">🗡️</button>
+    </div>
+
+    <!-- Overlay inicial -->
+    <div class="overlay" id="ovl">
+      <div class="card">
+        <h1>ABYSS RUNNER</h1>
+        <p>Plataformer estilo Mario com clima Dark Souls: espada, bonfires (checkpoints) e power-ups roguelike.</p>
+        <ul>
+          <li>Toque: ◀︎ ▶︎ ⤴︎ 🗡️</li>
+          <li>Acenda bonfires para salvar.</li>
+          <li>Power-ups aparecem aleatoriamente.</li>
+        </ul>
+        <div class="row">
+          <button class="btn" id="play">▶️ Jogar</button>
+          <button class="btn" id="vibe">📳 Vibração</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+  </main>
+
+  <footer class="foot">
+    <span>JS puro • 60 FPS • PWA offline</span>
+    <div class="bar" title="Stamina"><i id="stBar" style="width:100%"></i></div>
+  </footer>
+
+  <script src="game.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
